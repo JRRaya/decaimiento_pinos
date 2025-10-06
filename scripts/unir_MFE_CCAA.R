@@ -14,56 +14,43 @@ rutas <- list.files("data/mfe_ccaa",
                     recursive = TRUE, 
                     full.names = TRUE)
 
-rutas <- c("data/mfe_ccaa/andalucia/MFE_61.shp",
-           "data/mfe_ccaa/aragon/MFE_24.shp",
-           "data/mfe_ccaa/asturias/MFE_12.shp",
-           "data/mfe_ccaa/cantabria/MFE_13.shp",
-           "data/mfe_ccaa/catalunia/MFE_51.shp",
-           "data/mfe_ccaa/galicia/MFE_11.shp",
-           "data/mfe_ccaa/leon/MFE_41.shp",
-           "data/mfe_ccaa/madrid/MFE_30.shp",
-           "data/mfe_ccaa/mancha/MFE_42.shp",
-           "data/mfe_ccaa/murcia/MFE_62.shp",
-           "data/mfe_ccaa/navarra/MFE_22.shp",
-           "data/mfe_ccaa/pais_vasco/MFE_21.shp",
-           "data/mfe_ccaa/rioja/MFE_23.shp",
-           "data/mfe_ccaa/valencia/MFE_52.shp")
-
-# Filtramos para excluir archivos .shp.xml
+### 1.3.2. Filtramos para excluir archivos .shp.xml
 rutas <- rutas[!grepl("\\.xml$", rutas)]
 
-### 1.3.2. Definimos los nombres de las capas
+### 1.3.3. Definimos los nombres de las capas
 nombres <- basename(dirname(rutas))
 
-nombres <- c("andalucia",
-             "aragon",
-             "asturias",
-             "cantabria",
-             "catalunia",
-             "galicia",
-             "leon",
-             "madrid",
-             "mancha",
-             "murcia",
-             "navarra",
-             "pais_vasco",
-             "rioja",
-             "valencia")
-
-### 1.3.3. Creamos una lista donde guardar las capas cargadas
+### 1.3.4. Creamos una lista donde guardar las capas cargadas
 lista <- list()
 
-### 1.3.4. Establecemos el CRS objetivo a partir de la capa de madrid (comprobado en QGIS)
+### 1.3.5. Establecemos el CRS objetivo a partir de la capa de madrid (comprobado en QGIS)
 m <- st_read(rutas[8])
 crs_objetivo <- st_crs(m)
 rm(m)
 gc()
 
-### 1.3.5. Cargamos las capas
+### 1.3.5. Definimos los nombres de las columnas a conservar
+nombres_columnas <- c(FCCARB,
+                      FORARB,
+                      FormArbol,
+                      Distribuci,
+                      n_sp1,
+                      Especie1,
+                      O1,
+                      n_estado1,
+                      Estado1,
+                      FCCTOT,
+                      TIPOBOSQUE,
+                      RegBio,
+                      UsoIFN,
+                      UsoMFE,
+                      LULUCF)
+
+### 1.3.6. Cargamos las capas en al lista
 for(ruta in rutas) {
   # 1. Comprobamos si existe el archivo
-  # True, se detiene el bucle
-  # False, se carga la capa
+  # - True, se detiene el bucle
+  # - False, se carga la capa
   if(file.exists(ruta)) {
     capa <- st_read(ruta, quiet = FALSE) 
   } else{ 
@@ -71,9 +58,9 @@ for(ruta in rutas) {
   }
   
   # 2.Comprobamos si la capa no tiene crs asignado
-  # True, se detiene el bucle
-  # False, se detecta si no coincide con crs_objetivo
-    # True, se reproyecta acrs_objetivo
+  # - True, se detiene el bucle
+  # - False, se detecta si no coincide con crs_objetivo
+    # - True, se reproyecta acrs_objetivo
   if(is.na(st_crs(capa))) {
     stop("Error: Capa sin CRS asignado")
   } else {
@@ -82,8 +69,13 @@ for(ruta in rutas) {
     }
   }
   
+  # 3. Filtramos las columnas que quermos conservar
+  # Estas vienen recogidas en el archivo .xlsx (adjuntado a la información cartográfica descargada) 
+  capa <- capa %>% 
+    select(nombres_columnas)
+  
   # 3. Comprobamos que la capa contenga inconsistencias
-  # True, se hace valida mediante st_make_valid()
+  # - True, se hace valida mediante st_make_valid()
   if(any(!st_is_valid(capa))) {
     capa <- st_make_valid(capa)
   }
@@ -100,17 +92,17 @@ for(ruta in rutas) {
 names(lista) <- nombres
 
 # 2. Unimos los atributos de todas las capas en una sola capa vectorial
-espana <- bind_rows(lista)
+MFE <- bind_rows(lista)
 
 ## 2.1. Eliminamos la lista, de modo que que liberemos la RAM
 rm(lista)
 gc()
 
 ## 2.1. Comprobamos que no se hayan creado geometrias invalidas
-if(any(!st_is_valid(espana))) {
-  espana <- st_make_valid(espana)
+if(any(!st_is_valid(MFE))) {
+  MFE <- st_make_valid(MFE)
 }
 
 # 3. Guardamos el resultado
-st_write(espana,
-         dsn = "outputs/espana.shp")
+st_write(MFE,
+         dsn = "outputs/MFE.shp")
