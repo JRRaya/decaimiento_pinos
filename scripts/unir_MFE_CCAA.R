@@ -9,10 +9,10 @@ library(dplyr)
 
 ## 1.3. Cargamos los datos de cada una de las CCAA
 ### 1.3.1. Definimos las rutas delas capas
-#rutas <- list.files("data/mfe_ccaa", 
-#                    pattern = "^MFE_.*\\.shp$", 
-#                    recursive = TRUE, 
-#                    full.names = TRUE)
+rutas <- list.files("data/mfe_ccaa", 
+                    pattern = "^MFE_.*\\.shp$", 
+                    recursive = TRUE, 
+                    full.names = TRUE)
 
 rutas <- c("data/mfe_ccaa/andalucia/MFE_61.shp",
            "data/mfe_ccaa/aragon/MFE_24.shp",
@@ -30,10 +30,10 @@ rutas <- c("data/mfe_ccaa/andalucia/MFE_61.shp",
            "data/mfe_ccaa/valencia/MFE_52.shp")
 
 # Filtramos para excluir archivos .shp.xml
-# rutas <- rutas[!grepl("\\.xml$", rutas)]
+rutas <- rutas[!grepl("\\.xml$", rutas)]
 
 ### 1.3.2. Definimos los nombres de las capas
-# nombres <- basename(dirname(rutas))
+nombres <- basename(dirname(rutas))
 
 nombres <- c("andalucia",
              "aragon",
@@ -65,7 +65,7 @@ for(ruta in rutas) {
   # True, se detiene el bucle
   # False, se carga la capa
   if(file.exists(ruta)) {
-    capa <- st_read(ruta, quiet = TRUE) 
+    capa <- st_read(ruta, quiet = FALSE) 
   } else{ 
     stop("Error: Archivo no encontrado")
   }
@@ -102,6 +102,10 @@ names(lista) <- nombres
 # 2. Unimos los atributos de todas las capas en una sola capa vectorial
 espana <- bind_rows(lista)
 
+## 2.1. Eliminamos la lista, de modo que que liberemos la RAM
+rm(lista)
+gc()
+
 ## 2.1. Comprobamos que no se hayan creado geometrias invalidas
 if(any(!st_is_valid(espana))) {
   espana <- st_make_valid(espana)
@@ -109,4 +113,4 @@ if(any(!st_is_valid(espana))) {
 
 # 3. Guardamos el resultado
 st_write(espana,
-         dsn = "outputs/espana.gpkg")
+         dsn = "outputs/espana.shp")
