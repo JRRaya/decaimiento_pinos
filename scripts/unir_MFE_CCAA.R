@@ -30,7 +30,8 @@ rm(m)
 gc()
 
 ### 1.3.5. Definimos los nombres de las columnas a conservar
-nombres_columnas <- c(FCCARB,
+nombres_columnas <- c(Superficie,
+                      FCCARB,
                       FORARB,
                       FormArbol,
                       Distribuci,
@@ -41,9 +42,9 @@ nombres_columnas <- c(FCCARB,
                       Estado1,
                       FCCTOT,
                       TIPOBOSQUE,
-                      RegBio,
                       UsoIFN,
                       UsoMFE,
+                      RegBio,
                       LULUCF)
 
 ### 1.3.6. Cargamos las capas en al lista
