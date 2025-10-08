@@ -113,5 +113,5 @@ gc()
 
 # 3. Guardamos el resultado
 st_write(MFE,
-         dsn = "outputs/MFE.gpkg",
+         dsn = "outputs/MFE/MFE.gpkg",
          delete_dsn = TRUE)
